@@ -26,7 +26,6 @@ VERSION ?= $(shell cat version 2>/dev/null)
 # - use environment variables to overwrite this value (e.g export IMAGE_TAG=v0.0.2)
 IMAGE_TAG ?= $(VERSION)
 
-ARCH ?= "amd64"
 
 all: build
 
@@ -46,19 +45,43 @@ all: build
 help: ## Display this help.
 	@awk 'BEGIN {FS = ":.*##"; printf "\nUsage:\n  make \033[36m<target>\033[0m\n"} /^[a-zA-Z_0-9-]+:.*?##/ { printf "  \033[36m%-15s\033[0m %s\n", $$1, $$2 } /^##@/ { printf "\n\033[1m%s\033[0m\n", substr($$0, 5) } ' $(MAKEFILE_LIST)
 
+.PHONY: all
+all: fmt build
 
 ##@ Build
-
 .PHONY: build
-build: ## Build binary and tarball.
-	bash ./build.sh $(VERSION) $(ARCH)
+build: clean ## Build binary and tarball.
+	bash ./build.sh $(VERSION)
 
-.PHONY: build-docker
-build-docker: ## Build polaris-server docker images.
+.PHONY: pkg
+pkg: clean ## Build release package.
+	bash ./build_vm.sh $(VERSION)
+
+.PHONY: image
+image: ## Build polaris-server docker images.
+	bash ./build_docker.sh $(IMAGE_TAG) --no-push
+
+.PHONY: image-push
+image-push: ## Build polaris-server docker images.
 	bash ./build_docker.sh $(IMAGE_TAG)
 
+##@ Clean
 .PHONY: clean
 clean: ## Clean polaris-server make data.
-	@rm -rf polaris-sidecar-release_*
-	@rm -rf polaris-sideacr-arm64
-	@rm -rf polaris-sidecar-amd64
+	@rm -f polaris-sidecar
+	@rm -rf log logs polaris polaris-sidecar-*
+
+##@ Test
+.PHONY: test
+test:
+	go test ./... -race
+
+##@ Lint
+.PHONY: lint
+lint:
+	golangci-lint run
+
+##@ Format
+.PHONY: fmt
+fmt:
+	bash format.sh

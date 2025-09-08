@@ -9,49 +9,47 @@ logger:
   rotation_max_backups: 10
   rotation_max_age: 7
   output_level: info
-debugger:
-  enable: false
-  port: 30000
 polaris:
-  addresses: 
+  addresses:
     - ${POLARIS_ADDRESS}
-  # 地址提供插件，用于获取当前SDK所在的地域信息
   location:
     providers:
       - type: local
-        region: ${REGION}
-        zone: ${ZONE}
-        campus: ${CAMPUS}
-      # - type: remoteHttp
-      #   region: http://127.0.0.1/region
-      #   zone: http://127.0.0.1/zone
-      #   campus: http://127.0.0.1/campus
+        options:
+          region: ${REGION}
+          zone: ${ZONE}
+          campus: ${CAMPUS}
+  nearby_match_level: campus
 bind: 0.0.0.0
 port: 53
 namespace: default
-recurse:
-  enable: false
-  timeoutSec: 1
-mtls:
-  enable: false
-metrics:
-  enable: true
-  type: pull
-  metricPort: 0
-ratelimit:
-  enable: true
-  network: unix
 resolvers:
-  - name: dnsagent
+  - name: dnsagent # 默认dnsagent
     dns_ttl: 10
     enable: true
     suffix: "."
-    # option:
-    #   route_labels: "key:value,key:value"
-  - name: meshproxy
+    option:
+      route_labels: "" # 示例: "key1:value1,key2:value2"
+  - name: meshproxy # mesh模式
     dns_ttl: 120
     enable: false
     option:
       reload_interval_sec: 30
       dns_answer_ip: 10.4.4.4
       recursion_available: true
+recurse: # 查询北极星失败时，是否递归查询本地 nameserver，容器环境需要开启
+  enable: true
+  timeoutSec: 1
+mesh:
+  mtls: # mesh模式下，是否开启mtls
+    enable: false
+  metrics: # mesh模式下，是否开启metrics
+    enable: false
+    type: pull
+    metricPort: 0
+  ratelimit: # mesh模式下，是否开启ratelimit
+    enable: false
+    network: unix
+debugger: # 开发调试
+  enable: false
+  port: 50000

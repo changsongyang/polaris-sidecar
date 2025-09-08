@@ -19,6 +19,8 @@ package cmd
 
 import (
 	"github.com/spf13/cobra"
+
+	"github.com/polarismesh/polaris-sidecar/pkg/log"
 )
 
 var (
@@ -42,5 +44,9 @@ func init() {
  * @brief 执行命令行解析
  */
 func Execute() {
-	rootCmd.Execute()
+	err := rootCmd.Execute()
+	if err != nil {
+		log.Errorf("root cmd execute error: %v", err)
+		return
+	}
 }
